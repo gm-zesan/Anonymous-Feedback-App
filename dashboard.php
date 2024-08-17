@@ -3,14 +3,26 @@
     if (!isset($_SESSION['user'])) {
         header('Location: login.php');
         exit();
+    } else {
+        $username = $_SESSION['user']['name'];
+        $base_url = 'http://localhost/anonymous-feedback-app/feedback/feedback.php?user=';
+        $feedback_link = $base_url . $username;
     }
 
     $feedback_file = 'data/feedback.txt';
-    $feedback_list = [];
+    $user_feedback = []; 
 
     if (file_exists($feedback_file)) {
         $feedback_list = file($feedback_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        foreach ($feedback_list as $feedback) {
+            $parts = explode(': ', $feedback, 2);
+            list($stored_username, $feedback_text) = $parts;
+            if (strtolower($stored_username) === strtolower($username)) {
+                $user_feedback[] = $feedback_text;
+            }
+        }
     }
+    
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -78,15 +90,15 @@
 
         <div class="relative max-w-7xl mx-auto">
             <div class="flex justify-end">
-                <span class="block text-gray-600 font-mono border border-gray-400 rounded-xl px-2 py-1">Your feedback form link: <strong>http://localhost/anonymous-feedback-app/feedback/zesan.php</strong></span>
+                <span class="block text-gray-600 font-mono border border-gray-400 rounded-xl px-2 py-1">Your feedback form link: <strong><?= $feedback_link; ?></strong></span>
             </div>
             <h1 class="text-xl text-indigo-800 text-bold my-10">Received feedback</h1>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
 
-            <?php if (empty($feedback_list)): ?>
+            <?php if (empty($user_feedback)): ?>
                 <p>No feedback yet.</p>
             <?php else: 
-                foreach ($feedback_list as $feedback): ?>
+                foreach ($user_feedback as $feedback): ?>
                     <div class="relative flex items-center space-x-3 rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 hover:border-gray-400">
                         <div class="focus:outline-none">
                             <p class="text-gray-500"><?= htmlspecialchars($feedback); ?></p>
